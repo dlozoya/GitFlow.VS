@@ -27,7 +27,7 @@ namespace GitFlowVS.Extension
                 Text = "GitFlow";
                 Image = Resources.LinkIcon;
                 teamExplorer = GetService<ITeamExplorer>();
-                gitService = (IGitExt)serviceProvider.GetService(typeof(IGitExt));
+                gitService = serviceProvider.GetService(typeof(IGitExt)) as IGitExt;
 
                 if (teamExplorer != null)
                 {

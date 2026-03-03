@@ -66,8 +66,8 @@ namespace GitFlowVS.Extension
         public GitFlowPage([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
         {
             Title = "GitFlow";
-            gitService = (IGitExt)serviceProvider.GetService(typeof(IGitExt));
-            teamExplorer = (ITeamExplorer) serviceProvider.GetService(typeof(ITeamExplorer));
+            gitService = serviceProvider.GetService(typeof(IGitExt)) as IGitExt;
+            teamExplorer = serviceProvider.GetService(typeof(ITeamExplorer)) as ITeamExplorer;
 
             if (gitService != null)
             {
@@ -121,7 +121,7 @@ namespace GitFlowVS.Extension
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
                 new Action(() =>
-                    teamExplorer.NavigateToPage(new Guid(page), null)));
+                    teamExplorer?.NavigateToPage(new Guid(page), null)));
 
         }
     }

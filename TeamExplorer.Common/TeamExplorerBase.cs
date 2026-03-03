@@ -55,7 +55,11 @@ namespace TeamExplorer.Common
             Debug.Assert(ServiceProvider != null, "GetService<T> called before service provider is set");
             if (ServiceProvider != null)
             {
-                return (T)ServiceProvider.GetService(typeof(T));
+                object service = ServiceProvider.GetService(typeof(T));
+                if (service is T typedService)
+                {
+                    return typedService;
+                }
             }
 
             return default(T);
