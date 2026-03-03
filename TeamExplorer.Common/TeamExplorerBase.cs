@@ -53,9 +53,55 @@ namespace TeamExplorer.Common
         public T GetService<T>()
         {
             Debug.Assert(ServiceProvider != null, "GetService<T> called before service provider is set");
-            if (ServiceProvider != null)
+            if (ServiceProvider == null)
             {
-                return (T)ServiceProvider.GetService(typeof(T));
+                return default(T);
+            }
+
+            try
+            {
+                object service = ServiceProvider.GetService(typeof(T));
+                if (service is T typedService)
+                {
+                    return typedService;
+                }
+
+                if (service != null)
+                {
+                    // VS versions can return host/wrapper objects for Team Explorer services.
+                    // Try to find a property exposing the requested service type.
+                    var properties = service.GetType().GetProperties();
+                    foreach (var property in properties)
+                    {
+                        if (!property.CanRead)
+                        {
+                            continue;
+                        }
+
+                        object nestedService;
+                        try
+                        {
+                            nestedService = property.GetValue(service, null);
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+
+                        if (nestedService is T nestedTypedService)
+                        {
+                            return nestedTypedService;
+                        }
+                    }
+                }
+            }
+            catch (InvalidCastException ex)
+            {
+                Debug.WriteLine($"Service cast error for {typeof(T).FullName}: {ex}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Service resolution error for {typeof(T).FullName}: {ex}");
             }
 
             return default(T);
