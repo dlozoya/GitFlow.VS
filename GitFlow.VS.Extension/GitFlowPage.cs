@@ -27,7 +27,15 @@ namespace GitFlowVS.Extension
         {
             get
             {
-                return gitService.ActiveRepositories.FirstOrDefault();
+                try
+                {
+                    return gitService?.ActiveRepositories?.FirstOrDefault();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Exception(ex);
+                    return null;
+                }
             }
         }
 
@@ -58,14 +66,21 @@ namespace GitFlowVS.Extension
         public GitFlowPage([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
         {
             Title = "GitFlow";
-            gitService = (IGitExt)serviceProvider.GetService(typeof(IGitExt));
-            teamExplorer = (ITeamExplorer) serviceProvider.GetService(typeof (ITeamExplorer));
-            gitService.PropertyChanged += OnGitServicePropertyChanged;
-            
+            gitService = serviceProvider.GetService(typeof(IGitExt)) as IGitExt;
+            teamExplorer = serviceProvider.GetService(typeof(ITeamExplorer)) as ITeamExplorer;
+
+            if (gitService != null)
+            {
+                gitService.PropertyChanged += OnGitServicePropertyChanged;
+            }
+
             var outWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-            var customGuid = new Guid("B85225F6-B15E-4A8A-AF6E-2BE96A4FE672");
-            outWindow.CreatePane(ref customGuid, "GitFlow.VS", 1, 1);
-            outWindow.GetPane(ref customGuid, out outputWindow);
+            if (outWindow != null)
+            {
+                var customGuid = new Guid("B85225F6-B15E-4A8A-AF6E-2BE96A4FE672");
+                outWindow.CreatePane(ref customGuid, "GitFlow.VS", 1, 1);
+                outWindow.GetPane(ref customGuid, out outputWindow);
+            }
 
             ui = new GitFlowPageUI();
             PageContent = ui;
@@ -78,7 +93,7 @@ namespace GitFlowVS.Extension
 
         public static void ActiveOutputWindow()
         {
-            OutputWindow.Activate();
+            OutputWindow?.Activate();
         }
 
         public static bool GitFlowIsInstalled
@@ -106,7 +121,7 @@ namespace GitFlowVS.Extension
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
                 new Action(() =>
-                    teamExplorer.NavigateToPage(new Guid(page), null)));
+                    teamExplorer?.NavigateToPage(new Guid(page), null)));
 
         }
     }

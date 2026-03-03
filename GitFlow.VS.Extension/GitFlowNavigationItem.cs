@@ -24,13 +24,17 @@ namespace GitFlowVS.Extension
         {
             try
             {
-                UpdateVisible();
                 Text = "GitFlow";
                 Image = Resources.LinkIcon;
-                IsVisible = true;
                 teamExplorer = GetService<ITeamExplorer>();
-                gitService = (IGitExt)serviceProvider.GetService(typeof(IGitExt));
-                teamExplorer.PropertyChanged += TeamExplorerOnPropertyChanged;
+                gitService = serviceProvider.GetService(typeof(IGitExt)) as IGitExt;
+
+                if (teamExplorer != null)
+                {
+                    teamExplorer.PropertyChanged += TeamExplorerOnPropertyChanged;
+                }
+
+                UpdateVisible();
             }
             catch (Exception ex)
             {
@@ -57,11 +61,9 @@ namespace GitFlowVS.Extension
 
         private void UpdateVisible()
         {
-            IsVisible = false;
-            if (gitService != null)
-            {
-                IsVisible = true;
-            }
+            // Keep the entry visible even if Git services are not initialized yet.
+            // VS can compose Team Explorer parts before IGitExt is available.
+            IsVisible = true;
         }
 
         public override void Execute()
@@ -75,7 +77,10 @@ namespace GitFlowVS.Extension
 		       Logger.Exception(ex);
 		       ShowNotification(ex.Message, NotificationType.Error);
 	        }
-            teamExplorer.NavigateToPage(new Guid(GuidList.GitFlowPage), null);
+            if (teamExplorer != null)
+            {
+                teamExplorer.NavigateToPage(new Guid(GuidList.GitFlowPage), null);
+            }
         }
     }
 }
